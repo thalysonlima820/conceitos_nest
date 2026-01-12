@@ -1,0 +1,71 @@
+@Url = http://localhost:3000
+
+### AppControllerGetHello
+
+# @name AppControllerGetHello
+GET {{Url}}/home
+
+### Rotaproduto
+
+# @name Rotaproduto
+GET  {{Url}}/home/teste
+
+### RotaprodutoFiltrada
+
+# @name RotaprodutoFiltrada
+GET  {{Url}}/home/teste/123
+
+### RotaConceitosManual
+
+# @name RotaConceitosManual
+GET  {{Url}}/conceitos-manual
+
+### RotaConceitosManualTeste
+
+# @name RotaConceitosManualTest
+GET  {{Url}}/conceitos-manual/teste
+
+### RotaConceitosAutomatico
+
+# @name RotaConceitosAutomatico
+GET  {{Url}}/conceitos-automatico
+
+
+# RECADOS
+###
+GET  {{Url}}/recados
+###
+GET  {{Url}}/recados/2
+###
+POST  {{Url}}/recados
+Content-Type: application/json
+
+{
+    "texto": "Texto novo",
+    "de": "joana",
+    "para": "joao"
+}
+####
+PATCH   {{Url}}/recados/1
+Content-Type: application/json
+
+{
+    "texto": "dede",
+    "lido": true
+}
+###
+DELETE  {{Url}}/recados/2
+
+###
+GET  {{Url}}/recados/?limit=10&offset=10&user=luiz
+
+#Pessoa
+###
+POST  {{Url}}/pessoas
+Content-Type: application/json
+
+{
+    "email": "thalyson@gmail.com",
+    "password": "123456",
+    "nome": "thalyson"
+}
