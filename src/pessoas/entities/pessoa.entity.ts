@@ -1,17 +1,26 @@
 import { IsEmail } from 'class-validator';
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { RoutePolicy } from 'src/auth/enum/route-policy.enum';
+import { Recado } from 'src/recados/entities/recado.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class Pessoa {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({unique: true})
+  @Column({ unique: true })
   @IsEmail()
   email: string;
 
   @Column({ length: 255 })
-  passwordHast: string;
+  passwordHash: string;
 
   @Column({ length: 50 })
   nome: string;
@@ -21,4 +30,19 @@ export class Pessoa {
 
   @UpdateDateColumn()
   updateAt: Date;
+
+  @OneToMany(() => Recado, recado => recado.de)
+  recadosEnviados: Recado[];
+
+  @OneToMany(() => Recado, recado => recado.para)
+  recadosRecebidos: Recado[];
+
+  @Column({ default: true })
+  active: boolean;
+
+  @Column({type: 'simple-array', default:[]})
+  RoutePolicies: RoutePolicy[]
+
+  @Column({default: ''})
+  picture: string;
 }

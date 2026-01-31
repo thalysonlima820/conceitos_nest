@@ -1,27 +1,84 @@
-import { Module } from '@nestjs/common';
+import {
+  Module,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RecadosModule } from 'src/recados/recados.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PessoasModule } from 'src/pessoas/pessoas.module';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { MyExceptionFilter } from 'src/common/filters/my-exception.filter';
+import { IsAdminGuard } from 'src/common/guards/is-admin.guard';
+import { ConfigModule, ConfigType } from '@nestjs/config';
+import * as Joi from '@hapi/joi';
+import appConfig from './app.config';
+import { AuthModule } from 'src/auth/auth.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import * as path from 'path';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      database: 'postgres',
-      password: '7586',
-      autoLoadEntities: true, //carregada entidades sem precisar especifica-las
-      synchronize: true, //sicroniza com o BD nao deve ser usado em producao
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      load: [appConfig],
+      validationSchema: Joi.object({
+        DATABASE_TYPE: Joi.required(),
+        DATABASE_HOST: Joi.required(),
+        DATABASE_PORT: Joi.number().default(5432),
+        DATABASE_USERNAME: Joi.required(),
+        DATABASE_DATABASE: Joi.required(),
+        DATABASE_PASSWORD: Joi.required(),
+        DATABASE_AUTOLOADENTITIES: Joi.number().min(0).max(1).default(1),
+        DATABASE_SYNCHRONIZE: Joi.number().min(0).max(1).default(0),
+      }),
+    }),
+     ConfigModule.forFeature(appConfig),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule.forFeature(appConfig)],
+      inject: [appConfig.KEY],
+      useFactory: async (appConfigurations: ConfigType<typeof appConfig>) => {
+        return {
+          type: appConfigurations.database.type,
+          host:  appConfigurations.database.host,
+          port:  appConfigurations.database.port,
+          username:  appConfigurations.database.username,
+          database:  appConfigurations.database.database,
+          password:  appConfigurations.database.password,
+          autoLoadEntities:  appConfigurations.database.autoLoadEntities,
+          synchronize:  appConfigurations.database.synchronize,
+        };
+      },
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: path.resolve(__dirname, '../', '../', 'pictures'),
+      serveRoot: '/pictures'
     }),
     RecadosModule,
     PessoasModule,
+    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: MyExceptionFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: IsAdminGuard,
+    },
+  ],
   exports: [],
 })
 export class AppModule {}
+/*
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(SimpleMiddleware).forRoutes({
+      path: '*',
+      method: RequestMethod.ALL,
+    });
+  }
+}
+*/

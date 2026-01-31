@@ -1,63 +1,61 @@
 @Url = http://localhost:3000
+@authtoken = {{authenticate.response.body.token}}
+@refreshtoken = {{authenticate.response.body.refreshToken}}
 
-### AppControllerGetHello
+#Auth
+### authenticate
+# @name authenticate
+POST {{Url}}/auth
+Content-Type: application/json
 
-# @name AppControllerGetHello
-GET {{Url}}/home
+{
+    "email": "thalyson@gmail.com",
+    "password": "123456"
+}
+### reauthenticate
+# @name reauthenticate
+POST {{Url}}/auth/refresh
+Content-Type: application/json
 
-### Rotaproduto
-
-# @name Rotaproduto
-GET  {{Url}}/home/teste
-
-### RotaprodutoFiltrada
-
-# @name RotaprodutoFiltrada
-GET  {{Url}}/home/teste/123
-
-### RotaConceitosManual
-
-# @name RotaConceitosManual
-GET  {{Url}}/conceitos-manual
-
-### RotaConceitosManualTeste
-
-# @name RotaConceitosManualTest
-GET  {{Url}}/conceitos-manual/teste
-
-### RotaConceitosAutomatico
-
-# @name RotaConceitosAutomatico
-GET  {{Url}}/conceitos-automatico
+{
+    "refreshToken": "{{refreshtoken}}"
+}
 
 
 # RECADOS
-###
+### GET  {{Url}}/recados
 GET  {{Url}}/recados
+Authorization: Bearer {{authtoken}}
 ###
-GET  {{Url}}/recados/2
+GET  {{Url}}/recados/
+?limit=
+&offset=2
+###
+GET  {{Url}}/recados/68
 ###
 POST  {{Url}}/recados
+Authorization: Bearer {{authtoken}}
 Content-Type: application/json
 
 {
     "texto": "Texto novo",
-    "de": "joana",
-    "para": "joao"
+    "paraId": 22
 }
 ####
-PATCH   {{Url}}/recados/1
+PATCH   {{Url}}/recados/69
+Authorization: Bearer {{authtoken}}
 Content-Type: application/json
 
 {
-    "texto": "dede",
-    "lido": true
+    "texto": "editado",
+    "lido": false
 }
 ###
-DELETE  {{Url}}/recados/2
+DELETE  {{Url}}/recados/68
+Authorization: Bearer {{authtoken}}
 
-###
-GET  {{Url}}/recados/?limit=10&offset=10&user=luiz
+
+
 
 #Pessoa
 ###
@@ -67,5 +65,42 @@ Content-Type: application/json
 {
     "email": "thalyson@gmail.com",
     "password": "123456",
-    "nome": "thalyson"
+    "nome": "abelha",
+    "RoutePolicies": ["createRecado", "findAllRecados"]
 }
+###
+PATCH   {{Url}}/pessoas/17
+Authorization: Bearer {{authtoken}}
+Content-Type: application/json
+
+{
+    "email": "thalyson@gmail.com",
+    "password": "123456"
+}
+###
+GET  {{Url}}/pessoas
+Authorization: Bearer {{authtoken}}
+###
+GET  {{Url}}/pessoas/23
+Authorization: Bearer {{authtoken}}
+
+###
+DELETE    {{Url}}/pessoas/21
+Authorization: Bearer {{authtoken}}
+
+
+#Upload
+### Foto do usuário
+POST {{Url}}/pessoas/upload-picture
+Authorization: Bearer {{authtoken}}
+Content-Type: multipart/form-data; boundary=----BoundaryDelimitadorHttp
+
+------BoundaryDelimitadorHttp
+Content-Disposition: form-data; name="file"; filename="foto.jpg"
+Content-Type: image/jpeg
+
+< ./dev/images/foto.jpg
+------BoundaryDelimitadorHttp--
+
+### ver foto
+GET {{Url}}/pictures/23.jpg

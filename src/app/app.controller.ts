@@ -1,9 +1,16 @@
-import { Controller, Get, HttpCode, HttpStatus, Param } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Inject, Param } from '@nestjs/common';
 import { AppService } from './app.service';
+import appConfig from './app.config';
+import type { ConfigType } from '@nestjs/config';
+
 
 @Controller('home')
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    @Inject(appConfig.KEY)
+    private readonly appConfigurations: ConfigType<typeof appConfig>,
+  ) {}
   @HttpCode(HttpStatus.OK)
   @Get()
   getHello(): string {
