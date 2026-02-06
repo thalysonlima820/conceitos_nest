@@ -1,6 +1,4 @@
-import {
-  Module,
-} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RecadosModule } from 'src/recados/recados.module';
@@ -15,9 +13,19 @@ import appConfig from './app.config';
 import { AuthModule } from 'src/auth/auth.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import * as path from 'path';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 10000,
+          limit: 10,
+          blockDuration: 5000,
+        },
+      ],
+    }),
     ConfigModule.forRoot({
       envFilePath: '.env',
       load: [appConfig],
@@ -32,26 +40,26 @@ import * as path from 'path';
         DATABASE_SYNCHRONIZE: Joi.number().min(0).max(1).default(0),
       }),
     }),
-     ConfigModule.forFeature(appConfig),
+    ConfigModule.forFeature(appConfig),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule.forFeature(appConfig)],
       inject: [appConfig.KEY],
       useFactory: async (appConfigurations: ConfigType<typeof appConfig>) => {
         return {
           type: appConfigurations.database.type,
-          host:  appConfigurations.database.host,
-          port:  appConfigurations.database.port,
-          username:  appConfigurations.database.username,
-          database:  appConfigurations.database.database,
-          password:  appConfigurations.database.password,
-          autoLoadEntities:  appConfigurations.database.autoLoadEntities,
-          synchronize:  appConfigurations.database.synchronize,
+          host: appConfigurations.database.host,
+          port: appConfigurations.database.port,
+          username: appConfigurations.database.username,
+          database: appConfigurations.database.database,
+          password: appConfigurations.database.password,
+          autoLoadEntities: appConfigurations.database.autoLoadEntities,
+          synchronize: appConfigurations.database.synchronize,
         };
       },
     }),
     ServeStaticModule.forRoot({
       rootPath: path.resolve(__dirname, '../', '../', 'pictures'),
-      serveRoot: '/pictures'
+      serveRoot: '/pictures',
     }),
     RecadosModule,
     PessoasModule,
@@ -68,6 +76,10 @@ import * as path from 'path';
       provide: APP_GUARD,
       useClass: IsAdminGuard,
     },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
+    }
   ],
   exports: [],
 })

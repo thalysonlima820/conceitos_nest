@@ -1,6 +1,7 @@
 import {
   BadGatewayException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   Scope,
@@ -17,22 +18,18 @@ import * as fs from 'fs/promises';
 
 @Injectable({ scope: Scope.DEFAULT })
 export class PessoasService {
-  private count = 0;
-
   constructor(
     @InjectRepository(Pessoa)
     private readonly pessoaRepository: Repository<Pessoa>,
     private readonly hashingService: HashingService,
-  ) {
-    this.count++;
-    console.log('pessoa service iniciado', this.count);
-  }
+  ) {}
 
   async create(createPessoaDto: CreatePessoaDto) {
     try {
       const passwordHash = await this.hashingService.hash(
         createPessoaDto.password,
       );
+      console.log(passwordHash);
       const pessoaData = {
         email: createPessoaDto.email,
         passwordHash,
@@ -62,9 +59,8 @@ export class PessoasService {
   }
 
   async findOne(id: number) {
-    this.count++;
-    console.log(`pessoa service ${this.count} findone`);
-    const pessoa = await this.pessoaRepository.findOne({ where: { id: id } });
+    const pessoa = await this.pessoaRepository.findOneBy({ id });
+    if(!pessoa) throw new NotFoundException('pessoa nao encotrada')
     return pessoa;
   }
 
@@ -93,14 +89,14 @@ export class PessoasService {
     }
 
     if (pessoa.id !== tokenPayload.sub) {
-      throw new NotFoundException('voce nao e essa pessoa');
+      throw new ForbiddenException('voce nao e essa pessoa');
     }
 
     return this.pessoaRepository.save(pessoa);
   }
 
   async remove(id: number, tokenPayload: TokenPayloadDto) {
-    const pessoa = await this.pessoaRepository.findOneBy({ id });
+    const pessoa = await this.findOne(id);
     if (!pessoa) {
       throw new NotFoundException('Pessoa nao encontrada');
     }
@@ -118,9 +114,9 @@ export class PessoasService {
       throw new BadGatewayException('file too small');
     }
 
-    const pessoa = await this.findOne(tokenPayload.sub)
+    const pessoa = await this.findOne(tokenPayload.sub);
 
-    if(!pessoa) throw new BadGatewayException('pessoa nao encontrda')
+    if (!pessoa) throw new BadGatewayException('pessoa nao encontrda');
 
     const fileExtension = path
       .extname(file.originalname)
@@ -132,10 +128,10 @@ export class PessoasService {
     await fs.writeFile(fileFullPath, file.buffer);
 
     pessoa.picture = fileName;
-    await this.pessoaRepository.save(pessoa)
+    await this.pessoaRepository.save(pessoa);
 
     return {
-      pessoa
-    }
+      pessoa,
+    };
   }
 }

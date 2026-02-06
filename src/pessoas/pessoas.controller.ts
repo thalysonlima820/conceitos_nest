@@ -43,11 +43,14 @@ export class PessoasController {
 
   @Get()
   @UseGuards(AuthTokenGuard)
-  findAll(@Req() req: Request) {
-    console.log(req[REQUEST_TOKEN_PAYLOAD_KEY]);
-    console.log(this.recadosUltils.inventerString('thalyson'));
+  findAll() {
     return this.pessoasService.findAll();
   }
+  // findAll(@Req() req: Request) {
+  //   console.log(req[REQUEST_TOKEN_PAYLOAD_KEY]);
+  //   console.log(this.recadosUltils.inventerString('thalyson'));
+  //   return this.pessoasService.findAll();
+  // }
 
   @Get(':id')
   @UseGuards(AuthTokenGuard)

@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,16 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3000);
+  // helmet -> cabecalho de seguranca no portocolo http
+  // cora -> permitir dominio a requsitar sua api
+
+  if (process.env.NODE_ENV === 'production') {
+    app.use(helmet());
+    app.enableCors({
+      origin: '*',
+    });
+  }
+
+  await app.listen(process.env.APP_PORT as any);
 }
 void bootstrap();
